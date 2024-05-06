@@ -1,0 +1,42 @@
+{
+  "name": "@jung.group/node-red-contrib",
+  "version": "1.0.1",
+  "description": "JUNG Open API for Node-RED",
+  "keywords": [
+    "jung",
+    "node-red"
+  ],
+  "author": "Albrecht JUNG",
+  "license": "ISC",
+  "node-red": {
+    "version": ">=2.0.0",
+    "nodes": {
+      "jung-send-command": "jung-send-command.js",
+      "jung-receive-status": "jung-receive-status.js",
+      "jungcloud-config": "jungcloud-config.js"
+    }
+  },
+  "dependencies": {
+    "got": "^12.0.0",
+    "raw-body": "^2.5.0",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=15.10.0"
+  },
+  "main": "jung-send-command.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jung.group/node-red-contrib-jung.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jung.group/node-red-contrib-jung/issues"
+  },
+  "homepage": "https://github.com/jung.group/node-red-contrib-jung#readme"
+}

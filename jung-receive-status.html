@@ -1,0 +1,290 @@
+<script type="text/html" data-template-name="jung-receive-status">
+  <div class="form-row">
+    <label for="node-input-name" class="label"><i class="fa fa-tag"></i> Name</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-name" style="width:100%" />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-settings" class="label"><i class="fa fa-tag"></i> Configuration</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-settings" style="width:100%" />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-inputSelect-settings" class="label"><i class="fa fa-tag"></i> Datapoint</label>
+    <span class="spanStilius">
+      <div style="width: 100%; display: inline-flex;">
+        <select id="node-inputSelect-datapoint" style="flex-grow: 1;"></select>
+        <a class="red-ui-button" id="node-inputSelect-dpRefreshBtn" style="margin-left: 10px;"><i class="fa fa-refresh"></i></a>
+      </div>
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-datapointID" class="label"><i class="fa fa-tag"></i> Datapoint ID</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-datapointID" style="width:100%" readonly />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-url" class="label"><i class="fa fa-globe"></i> URL</label>
+    <span class="spanStilius">
+      <input id="node-input-url" type="text" style="width:100%" readonly />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label class="fwi">
+      To get feedbacks, this Node-RED installation must be accessible from the Internet (JUNG Cloud calls this URL when feedback
+      event happens).
+    </label>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-JUNGdatapointID" class="label"><i class="fa fa-tag"></i> ID for JUNG cloud</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-JUNGdatapointID" style="width:100%" readonly value="" />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-versija" class="label"><i class="fa fa-tag"></i> Version</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-05-06 v1.0.0" />
+    </span>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="jung-receive-status">
+  <p>Receive feedback (status) from JUNG Open Cloud API.</p>
+  <p>
+    Important: if Node-Red is running on local machine, port forward on local internet router, from port :80/tcp to Node-Red port
+    (usually :1880/tcp) has to be implemented. JUNG Cloud sends feedback as HTTP Get request to Node-Red.
+  </p>
+  <p>
+    Manual testing can be done on "https://reqbin.com/" for example, by entering URL from Node Properties, selecting POST and
+    entering "{}" as JSON data (-> empty JSON data).
+  </p>
+</script>
+
+<script type="text/html" data-template-name="jung-receive-status-http-response">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" data-i18n="[placeholder]common.label.name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-statusCode"><i class="fa fa-long-arrow-left"></i> Status</label>
+    <input type="text" id="node-input-statusCode" placeholder="msg.statusCode" />
+  </div>
+  <div class="form-row" style="margin-bottom:0;">
+    <label><i class="fa fa-list"></i> Headers</label>
+  </div>
+  <div class="form-row node-input-headers-container-row">
+    <ol id="node-input-headers-container"></ol>
+  </div>
+  <div class="form-tips">Tips</div>
+</script>
+
+<script type="text/javascript">
+  (function () {
+    RED.nodes.registerType("jung-receive-status", {
+      category: "JUNG",
+      color: "rgb(231, 231, 174)",
+      paletteLabel: "Receive status",
+      defaults: {
+        name: { value: "" },
+        url: { value: "", label: "URL to receive status" },
+        settings: { value: "", type: "jungcloud-config" },
+        datapointID: { value: "", label: "ID of JUNG Cloud datapoint" },
+        JUNGdatapointID: { value: "", label: "Internal ID of subcription to JUNG Cloud" },
+      },
+      inputs: 0,
+      outputs: 1,
+      icon: "white-globe.svg",
+      label: function () {
+        if (this.name) {
+          return this.name;
+        } else {
+          return "JUNG receive status";
+        }
+      },
+      labelStyle: function () {
+        return this.name ? "node_label_italic" : "";
+      },
+      oneditprepare: function () {
+        var root = RED.settings.httpNodeRoot;
+        const node = this;
+
+        // listeners
+        $("#node-inputSelect-datapoint").on("change", function (type, value) {
+          if (value !== null) {
+            $("#node-input-datapointID").val($("#node-inputSelect-datapoint").val());
+
+            if (configA !== undefined) {
+              if (configA.callbackURL !== "") {
+                $("#node-input-url").val(configA.callbackURL + "/jung/" + $("#node-input-JUNGdatapointID").val());
+              }
+            }
+          }
+        });
+
+        $("#node-input-settings").on("change", function (old) {
+          if ($("#node-input-settings").val() == "_ADD_") {
+            $("#node-input-url").val("");
+            $("#node-input-JUNGdatapointID").val("");
+            $("#node-input-datapointID").val("");
+            return;
+          }
+          configA = RED.nodes.node($("#node-input-settings").val());
+          $("#node-inputSelect-dpRefreshBtn").click();
+        });
+
+        $("#node-inputSelect-dpRefreshBtn").on("click", function () {
+          if (configA === undefined) {
+            console.log("configA not defined, skipping...");
+            $("#node-inputSelect-datapoint").empty();
+            $("#node-input-datapointID").val("");
+            return;
+          }
+
+          if (configA.datapoints == "") return;
+          if (configA.datapoints == "{}") return;
+
+          var resp = JSON.parse(configA.datapoints);
+
+          var preselectedID = $("#node-input-datapointID").val();
+
+          $("#node-inputSelect-datapoint").empty();
+          var element = document.createElement("option");
+          var e_selected = false;
+          for (let i = 0; i < resp.length; i++) {
+            element = document.createElement("option");
+            element.text = resp[i].attributes.title;
+            element.value = resp[i].id;
+            if (preselectedID === element.value) {
+              element.selected = true;
+              e_selected = true;
+            }
+            document.getElementById("node-inputSelect-datapoint").add(element);
+          }
+          if (e_selected === false) {
+            if (resp.length > 0) {
+              $("#node-input-datapointID").val(resp[0].id);
+            }
+          }
+
+          if ($("#node-input-JUNGdatapointID").val() === "") {
+            $("#node-input-JUNGdatapointID").val(generateUUID());
+          }
+
+          var sURL = configA.callbackURL;
+          if (typeof sURL === "undefined" || sURL == "") {
+            $("#node-input-url").val("Please define server callback URL in settings!!!");
+          } else {
+            if (sURL.slice(-1) !== "/") sURL = sURL + "/";
+            if ($("#node-input-JUNGdatapointID").val() === undefined) {
+              let xuid = generateUUID();
+              $("#node-input-JUNGdatapointID").val(xuid);
+              $("#node-input-url").val(sURL + "jung/" + xuid);
+            } else {
+              $("#node-input-url").val(sURL + "jung/" + $("#node-input-JUNGdatapointID").val());
+            }
+          }
+        });
+
+        // active actions
+        // console.log("node.url: " + node.url);
+        // console.log("node.JUNGdatapointID: " + node.JUNGdatapointID);
+
+        let configA = RED.nodes.node($("#node-input-settings").val());
+        if (configA === undefined) {
+          $("#node-input-url").val("");
+          $("#node-input-JUNGdatapointID").val("");
+          return;
+        }
+
+        if (root.slice(-1) == "/") {
+          root = root.slice(0, -1);
+        }
+        if (root == "") {
+          $("#node-input-tip").hide();
+        } else {
+          $("#node-input-path").html(root);
+          $("#node-input-tip").show();
+        }
+
+        if ($("#node-input-JUNGdatapointID").val() === "") {
+          $("#node-input-JUNGdatapointID").val(generateUUID());
+        }
+
+        // jei default reikšmė - "" - reiškia, reikia sugeneruoti naują pilną vertę
+        // console.log("onEditPrepare> start, url val:" + $("#node-input-url").val());
+        if ($("#node-input-url").val() == "" || $("#node-input-url").val().includes("callback URL")) {
+          if (configA === undefined) {
+            // console.log("configA not defined, skipping...");
+            $("#node-input-url").val("Server callback URL must be defined in settings!!!");
+            $("#node-inputSelect-datapoint").empty();
+            $("#node-input-datapointID").val("");
+          } else {
+            var sURL = configA.callbackURL;
+            if (typeof sURL === "undefined" || sURL == "") {
+              $("#node-input-url").val("Please define server callback URL in settings!!!");
+              // console.log("Server callback URL is not defined in settings.");
+            } else {
+              if (sURL.slice(-1) !== "/") sURL = sURL + "/";
+              if ($("#node-input-JUNGdatapointID").val() === undefined) {
+                let xuid = generateUUID();
+                $("#node-input-JUNGdatapointID").val(xuid);
+                $("#node-input-url").val(sURL + "jung/" + xuid);
+              } else {
+                $("#node-input-url").val(sURL + "jung/" + $("#node-input-JUNGdatapointID").val());
+              }
+            }
+          }
+        }
+
+        $("#node-inputSelect-dpRefreshBtn").click();
+      },
+
+      oneditsave: function () {},
+      oneditresize: function (size) {},
+    });
+  })();
+
+  function generateUUID() {
+    // Public Domain/MIT
+    var d = new Date().getTime(); //Timestamp
+    var d2 = (typeof performance !== "undefined" && performance.now && performance.now() * 1000) || 0; //Time in microseconds since page-load or 0 if unsupported
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16; //random number between 0 and 16
+      if (d > 0) {
+        // Use timestamp until depleted
+        r = (d + r) % 16 | 0;
+        d = Math.floor(d / 16);
+      } else {
+        // Use microseconds since page-load if supported
+        r = (d2 + r) % 16 | 0;
+        d2 = Math.floor(d2 / 16);
+      }
+      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+    });
+  }
+</script>
+
+<style>
+  .label {
+    width: 25% !important;
+    margin-top: 7px;
+  }
+
+  .spanStilius {
+    float: right;
+    margin-bottom: 10px;
+    width: 70%;
+    white-space: nowrap;
+  }
+</style>

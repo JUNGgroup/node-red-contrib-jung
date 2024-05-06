@@ -1,0 +1,161 @@
+<script type="text/html" data-template-name="jung-send-command">
+  <div class="form-row">
+    <label for="node-input-name" class="label"><i class="fa fa-tag"></i> Name</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-name" style="width:100%" />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-settings" class="label"><i class="fa fa-tag"></i> Configuration</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-settings" style="width:100%" />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-inputSelect-settings" class="label"><i class="fa fa-tag"></i> Datapoint</label>
+    <span class="spanStilius">
+      <div style="width: 100%; display: inline-flex;">
+        <select id="node-inputSelect-datapoint" style="flex-grow: 1;"></select>
+        <a class="red-ui-button" id="node-inputSelect-dpRefreshBtn" style="margin-left: 10px;"><i class="fa fa-refresh"></i></a>
+      </div>
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-datapointID" class="label"><i class="fa fa-tag"></i> Datapoint ID</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-datapointID" style="width:100%" readonly />
+    </span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-versija" class="label"><i class="fa fa-tag"></i> Version</label>
+    <span class="spanStilius">
+      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-02-17 v1.04" />
+    </span>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="jung-send-command">
+  <p>Send command to JUNG Open Cloud API.</p>
+</script>
+
+<script type="text/javascript">
+  (function () {
+    const defaultOptions = [
+      { value: "other", label: "JUNG send command", hasValue: true, icon: "red/images/typedInput/az.svg" },
+      { value: "msg", label: "msg.", hasValue: true },
+    ];
+
+    RED.nodes.registerType("jung-send-command", {
+      category: "JUNG",
+      color: "rgb(231, 231, 174)",
+      paletteLabel: "Send command",
+      defaults: {
+        name: { value: "" },
+        method: { value: "PUT" },
+        datapointID: { value: "" },
+        ret: { value: "txt" },
+        url: {
+          value: "",
+          validate: function (v, opt) {
+            if (v.trim().length === 0 || v.indexOf("://") === -1 || v.trim().indexOf("http") === 0) {
+              return true;
+            }
+            return RED._("node-red:httpin.errors.invalid-url");
+          },
+        },
+        settings: { value: "", type: "jungcloud-config" },
+        datapoint: { value: "" },
+      },
+      inputs: 1,
+      outputs: 1,
+      outputLabels: function (i) {
+        return {
+          txt: this._("httpin.label.utf8String"),
+          bin: this._("httpin.label.binaryBuffer"),
+          obj: this._("httpin.label.jsonObject"),
+        }[this.ret];
+      },
+      icon: "white-globe.svg",
+      align: "right",
+      label: function () {
+        return this.name || "JUNG send command";
+      },
+      labelStyle: function () {
+        return this.name ? "node_label_italic" : "";
+      },
+
+      oneditprepare: function () {
+        const node = this;
+
+        $("#node-inputSelect-datapoint").on("change", function (type, value) {
+          if (value !== null) {
+            $("#node-input-datapointID").val($("#node-inputSelect-datapoint").val());
+          }
+        });
+
+        $("#node-input-settings").on("change", function () {
+          $("#node-inputSelect-dpRefreshBtn").click();
+        });
+
+        $("#node-inputSelect-dpRefreshBtn").on("click", function () {
+          var configA = RED.nodes.node($("#node-input-settings").val());
+          if (configA === undefined) {
+            // node.warn("configA not defined, skipping...");
+            $("#node-inputSelect-datapoint").empty();
+            $("#node-input-datapointID").val("");
+            return;
+          }
+
+          if (configA.datapoints == "") return;
+          if (configA.datapoints == "{}") return;
+
+          var resp = JSON.parse(configA.datapoints);
+
+          var preselectedID = $("#node-input-datapointID").val();
+          // console.log("node-inputSelect-dpRefreshBtn> preselected datapointID: " + preselectedID);
+
+          $("#node-inputSelect-datapoint").empty();
+          var element = document.createElement("option");
+          var e_selected = false;
+          for (let i = 0; i < resp.length; i++) {
+            element = document.createElement("option");
+            element.text = resp[i].attributes.title;
+            element.value = resp[i].id;
+            if (preselectedID === element.value) {
+              element.selected = true;
+              e_selected = true;
+            }
+            document.getElementById("node-inputSelect-datapoint").add(element);
+          }
+          if (e_selected === false) {
+            if (resp.length > 0) {
+              $("#node-input-datapointID").val(resp[0].id);
+            }
+          }
+        });
+
+        $("#node-inputSelect-dpRefreshBtn").click();
+      },
+      oneditsave: function () {},
+      oneditresize: function (size) {},
+    });
+  })();
+</script>
+
+<style>
+  .label {
+    width: 25% !important;
+    margin-top: 7px;
+  }
+
+  .spanStilius {
+    float: right;
+    margin-bottom: 10px;
+    width: 70%;
+    white-space: nowrap;
+  }
+</style>

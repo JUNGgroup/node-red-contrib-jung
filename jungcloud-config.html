@@ -1,0 +1,123 @@
+<script type="text/html" data-template-name="jungcloud-config">
+  <div class="form-row">
+    <label for="node-config-input-installationName" style="width:200px;">
+      <i class="fa fa-bookmark"></i> Installation name
+    </label>
+    <input type="text" id="node-config-input-installationName" style="width:200px;" />
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-authenticationToken" class="fwi"><i class="fa fa-bookmark"></i> Authentication token</label>
+  </div>
+  <div class="form-row">
+    <input type="text" id="node-config-input-authenticationToken" class="fwi" />
+  </div>
+
+  <div class="form-row">
+    <button
+      type="button"
+      class="red-ui-button"
+      id="node-config-input-datapointsButton"
+      style="float: left; margin-right:25px; margin-bottom:25px"
+    >
+      Update now
+    </button>
+    <label class="fwi" style="display:table-cell; padding-top:10px">
+      Please update datapoints after entering authentication token
+    </label>
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-callbackURL" class="fwi">
+      <i class="fa fa-bookmark"></i> Callback server URL (Node-Red server)
+    </label>
+  </div>
+  <div class="form-row">
+    <input type="text" id="node-config-input-callbackURL" class="fwi" />
+  </div>
+
+  <div class="form-row">
+    <label class="fwi">
+      JUNG cloud sends feedbacks to current Node-RED server. Final URL will be defined dynamically, adding generated GUID of
+      datapoint to base server URL defined here.
+    </label>
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-datapointsLastUpdate" style="width:200px;">
+      <i class="fa fa-bookmark"></i> Datapoints last update
+    </label>
+    <input type="text" id="node-config-input-datapointsLastUpdate" style="width:200px;" />
+    <button type="button" class="red-ui-button" id="node-config-input-datapointsButton2">Update now</button>
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-datapoints" class="fwi"><i class="fa fa-bookmark"></i> Datapoints</label>
+  </div>
+  <div class="form-row">
+    <input type="text" id="node-config-input-datapoints" class="fwi" />
+  </div>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType("jungcloud-config", {
+    category: "config",
+    defaults: {
+      installationName: { value: "myJUNG", required: true },
+      authenticationToken: { value: "", required: false },
+      urlOutDatapoints: { value: "https://open-api.prod.jung-hosting.de/api/v2/datapoints", required: false },
+      urlOutValues: { value: "https://open-api.prod.jung-hosting.de/api/v2/datapoints/values", required: false },
+      callbackURL: { value: "", required: false },
+      datapoints: { value: "", required: false },
+      datapointsLastUpdate: { value: "", required: false },
+    },
+    label: function () {
+      return this.installationName;
+    },
+    oneditprepare: function () {
+      var node = this;
+
+      $("#node-config-input-datapoints").typedInput({ type: "json", types: ["json"] });
+
+      $("#node-config-input-datapointsButton2").on("click", function () {
+        $("#node-config-input-datapointsButton").click();
+      });
+
+      $("#node-config-input-datapointsButton").on("click", function () {
+        // console.log("config> using auth token: " + $("#node-config-input-authenticationToken").val());
+        var dataToSend = {
+          force_refresh: "1",
+          auth_token: $("#node-config-input-authenticationToken").val(),
+        };
+        $.ajax({
+          url: "jung/getDatapoints",
+          type: "POST",
+          data: JSON.stringify(dataToSend),
+          contentType: "application/json; charset=utf-8",
+          success: function (resp) {
+            // console.log("node-config-input-datapointsButton> getDatapoints ok ");
+            // console.log(JSON.stringify(resp));
+            $("#node-config-input-datapoints").typedInput("value", JSON.stringify(resp));
+            $("#node-config-input-datapointsLastUpdate").val(new Date().toJSON());
+          },
+          error: function (eresp, textStatus, errorThrown) {
+            console.log("node-config-input-datapointsButton> failed: ");
+            console.log(eresp);
+            console.log(textStatus);
+            console.log(errorThrown);
+          },
+        });
+      });
+    },
+
+    oneditsave: function () {
+      // console.log("onEditSave> start");
+    },
+  });
+</script>
+
+<style>
+  .fwi {
+    width: 100% !important;
+  }
+</style>
