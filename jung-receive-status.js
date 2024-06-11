@@ -120,6 +120,14 @@ module.exports = async function (RED) {
     // prettier-ignore
     console.log("registerOnJung> Registering `" + xnode.name + "` (" + 
         xnode.datapointID + ") for active feedback from JUNG on listener URL=" + xnode.url);
+    xnode.warn(
+      "registerOnJung> Registering `" +
+        xnode.name +
+        "` (" +
+        xnode.datapointID +
+        ") for active feedback from JUNG on listener URL=" +
+        xnode.url
+    );
 
     const url = "https://open-api.prod.jung-hosting.de/api/v2/subscriptions";
     const method = "POST";
@@ -176,13 +184,15 @@ module.exports = async function (RED) {
           // console.log("subscriptionID=" + JSON.stringify(rez.data.type));  // turi buti subscription
           if (rez.data.type !== "subscription") {
             console.log("registerOnJung> Returned data type is not subscription (-> " + rez.data.type + ")");
+            xnode.warn("registerOnJung> Returned data type is not subscription (-> " + rez.data.type + ")");
             return "";
           }
-          console.log("registerOnJung> got.subscriptionID=" + rez.data.id + " for " + xnode.name);
+          // console.log("registerOnJung> got.subscriptionID=" + rez.data.id + " for " + xnode.name);
           xnode.subscriptionID = rez.data.id;
           return rez.data.id; // bet sito jau niekam nebereikia
         } else {
           console.log("registerOnJung> Registration failed with code != 201, possible reason: " + msg.payload);
+          xnode.warn("registerOnJung> Registration failed with code != 201, possible reason: " + msg.payload);
         }
       })
       .catch((err) => {
@@ -271,16 +281,17 @@ module.exports = async function (RED) {
     // debug
     if (false) {
       console.log("receive.js> in post. smsg received: " + sbody + ", type: " + typeof sbody);
+      gnode.warn("receive.js> in post. smsg received: " + sbody + ", type: " + typeof sbody);
       // console.log("receive.js> in post. omsg received: " + obody + ", type: " + typeof obody);
-      // console.log('receive.js> in post. sbody.includes("agentilo.com/api/"): ' + sbody.includes("agentilo.com/api/"));
+      // console.log('receive.js> in post. sbody.includes("jung-hosting.de/api/"): ' + sbody.includes("jung-hosting.de/api/"));
       /* console.log(
           'receive.js> in post. sbody.includes(\'"type":"datapoint"\'): ' +
             sbody.replace(" ", "").includes('"type":"datapoint"')
         ); */
     }
-    if (sbody.includes("agentilo.com/api/") && sbody.replace(" ", "").includes('"type":"datapoint"')) {
-      // console.log("receive.js> agentilo filter ok, datapoint filter ok");
+    if (sbody.includes("jung-hosting.de/api/") && sbody.replace(" ", "").includes('"type":"datapoint"')) {
       // console.log("receive.js> ieskau datapointID=" + datapointID);
+      gnode.warn("receive.js> in post. msg received: " + sbody);
       if (gnode.datapointID !== "") {
         if (sbody.includes('"id":"' + gnode.datapointID + '"')) {
           // console.log("receive.js> req.body=" + req.body);

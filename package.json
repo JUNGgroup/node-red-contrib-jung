@@ -1,6 +1,6 @@
 {
   "name": "@jung.group/node-red-contrib",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JUNG Open API for Node-RED",
   "keywords": [
     "jung",
@@ -33,10 +33,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jung.group/node-red-contrib-jung.git"
+    "url": "git+https://github.com/junggroup/node-red-contrib-jung.git"
   },
   "bugs": {
-    "url": "https://github.com/jung.group/node-red-contrib-jung/issues"
+    "url": "https://github.com/junggroup/node-red-contrib-jung/issues"
   },
-  "homepage": "https://github.com/jung.group/node-red-contrib-jung#readme"
+  "homepage": "https://github.com/junggroup/node-red-contrib-jung#readme"
 }

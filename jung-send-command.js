@@ -54,6 +54,7 @@ module.exports = async function (RED) {
       if (method === "PUT" && typeof msg.payload !== "undefined") {
         var cmd = msg.payload;
         // console.log("jung-sendCommand> sending PUT to=" + this.name + ", with cmd=" + cmd);
+        node.warn("jung-sendCommand> sending PUT to=" + this.name + ", with cmd=" + cmd);
 
         opts.body = `{
             "data": [
@@ -77,14 +78,14 @@ module.exports = async function (RED) {
           msg.payload = res.body;
           msg.retry = 0;
 
-          // node.log("after return> msg.statusCode=" + msg.statusCode);
-          // 204 - ok
-          // 401 - unauthorized
-
-          if (msg.statusCode == 200) {
-            // TODO: checks in the future...
-            let globalContext = this.context().global;
-            globalContext.set("jung_datapoints", JSON.parse(res.body));
+          if (msg.statusCode == 204 || msg.statusCode == 200) {
+            // node.log("after return> msg.statusCode=" + msg.statusCode);
+            node.warn("jung-sendCommand.after return> msg.statusCode=" + msg.statusCode + " -> ok");
+            // 200 - ok
+            // 204 - ok
+            // 401 - unauthorized
+          } else {
+            node.warn("jung-sendCommand.after return> msg.statusCode=" + msg.statusCode);
           }
 
           // Convert the payload to the required return type
