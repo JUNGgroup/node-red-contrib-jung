@@ -318,6 +318,7 @@ module.exports = async function (RED) {
 
   function HTTPIn(n) {
     RED.nodes.createNode(this, n);
+    // n.name, n.id, n.settings
 
     var node = this;
     if (n.settings !== "") {
@@ -342,27 +343,27 @@ module.exports = async function (RED) {
       return;
     }
 
-    node.url = n.url || ""; // listen feedback URL
+    /* draft to identify node copy - if node is new or original?
+    if (node.oldId !== node.id) {
+      console.log("\n", " new node \n");
+      node.oldId = node.id;
+    } */
+
+    node.url = n.url || "";
     node.datapointID = n.datapointID || "";
     node.subscriptionID = ""; // received from JUNG cloud
-    node.JUNGdatapointID = n.JUNGdatapointID || generateUUID(); // unique ID of the same datapointID for cloud
 
     gnode = node;
 
-    if (node.url.includes("callback URL")) {
-      console.log(node.name + " jung-receive-status> not correct callbackURL provided, cancelling registration...");
-      return;
-    }
-
-    if (node.datapointID == "") {
-      console.log(node.name + " jung-receive-status> no JUNG datapoint ID provided, cancelling registration...");
+    if (node.datapointID === "" || node.url === "") {
+      console.log(node.name + " jung-receive-status> no JUNG datapoint ID, no URL provided, cancelling registration...");
       return;
     }
 
     if (false) {
       // debug
       console.log("node.datapointID: " + node.datapointID);
-      console.log("node.JUNGdatapointID: " + node.JUNGdatapointID);
+      console.log("node.id: " + node.id);
     }
 
     registerOnJung(node);

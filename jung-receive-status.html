@@ -45,16 +45,9 @@
   </div>
 
   <div class="form-row">
-    <label for="node-input-JUNGdatapointID" class="label"><i class="fa fa-tag"></i> ID for JUNG cloud</label>
-    <span class="spanStilius">
-      <input type="text" id="node-input-JUNGdatapointID" style="width:100%" readonly value="" />
-    </span>
-  </div>
-
-  <div class="form-row">
     <label for="node-input-versija" class="label"><i class="fa fa-tag"></i> Version</label>
     <span class="spanStilius">
-      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-06-11 v1.0.2" />
+      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-07-05 v1.0.3" />
     </span>
   </div>
 </script>
@@ -100,7 +93,6 @@
         url: { value: "", label: "URL to receive status" },
         settings: { value: "", type: "jungcloud-config" },
         datapointID: { value: "", label: "ID of JUNG Cloud datapoint" },
-        JUNGdatapointID: { value: "", label: "Internal ID of subcription to JUNG Cloud" },
       },
       inputs: 0,
       outputs: 1,
@@ -123,19 +115,12 @@
         $("#node-inputSelect-datapoint").on("change", function (type, value) {
           if (value !== null) {
             $("#node-input-datapointID").val($("#node-inputSelect-datapoint").val());
-
-            if (configA !== undefined) {
-              if (configA.callbackURL !== "") {
-                $("#node-input-url").val(configA.callbackURL + "/jung/" + $("#node-input-JUNGdatapointID").val());
-              }
-            }
           }
         });
 
         $("#node-input-settings").on("change", function (old) {
           if ($("#node-input-settings").val() == "_ADD_") {
             $("#node-input-url").val("");
-            $("#node-input-JUNGdatapointID").val("");
             $("#node-input-datapointID").val("");
             return;
           }
@@ -176,34 +161,15 @@
               $("#node-input-datapointID").val(resp[0].id);
             }
           }
-
-          if ($("#node-input-JUNGdatapointID").val() === "") {
-            $("#node-input-JUNGdatapointID").val(generateUUID());
-          }
-
-          var sURL = configA.callbackURL;
-          if (typeof sURL === "undefined" || sURL == "") {
-            $("#node-input-url").val("Please define server callback URL in settings!!!");
-          } else {
-            if (sURL.slice(-1) !== "/") sURL = sURL + "/";
-            if ($("#node-input-JUNGdatapointID").val() === undefined) {
-              let xuid = generateUUID();
-              $("#node-input-JUNGdatapointID").val(xuid);
-              $("#node-input-url").val(sURL + "jung/" + xuid);
-            } else {
-              $("#node-input-url").val(sURL + "jung/" + $("#node-input-JUNGdatapointID").val());
-            }
-          }
         });
 
         // active actions
-        // console.log("node.url: " + node.url);
-        // console.log("node.JUNGdatapointID: " + node.JUNGdatapointID);
 
         let configA = RED.nodes.node($("#node-input-settings").val());
         if (configA === undefined) {
-          $("#node-input-url").val("");
-          $("#node-input-JUNGdatapointID").val("");
+          $("#node-input-url").val("Server callback URL must be defined in settings!!!");
+          $("#node-inputSelect-datapoint").empty();
+          $("#node-input-datapointID").val("");
           return;
         }
 
@@ -217,34 +183,12 @@
           $("#node-input-tip").show();
         }
 
-        if ($("#node-input-JUNGdatapointID").val() === "") {
-          $("#node-input-JUNGdatapointID").val(generateUUID());
-        }
-
-        // jei default reikšmė - "" - reiškia, reikia sugeneruoti naują pilną vertę
-        // console.log("onEditPrepare> start, url val:" + $("#node-input-url").val());
-        if ($("#node-input-url").val() == "" || $("#node-input-url").val().includes("callback URL")) {
-          if (configA === undefined) {
-            // console.log("configA not defined, skipping...");
-            $("#node-input-url").val("Server callback URL must be defined in settings!!!");
-            $("#node-inputSelect-datapoint").empty();
-            $("#node-input-datapointID").val("");
-          } else {
-            var sURL = configA.callbackURL;
-            if (typeof sURL === "undefined" || sURL == "") {
-              $("#node-input-url").val("Please define server callback URL in settings!!!");
-              // console.log("Server callback URL is not defined in settings.");
-            } else {
-              if (sURL.slice(-1) !== "/") sURL = sURL + "/";
-              if ($("#node-input-JUNGdatapointID").val() === undefined) {
-                let xuid = generateUUID();
-                $("#node-input-JUNGdatapointID").val(xuid);
-                $("#node-input-url").val(sURL + "jung/" + xuid);
-              } else {
-                $("#node-input-url").val(sURL + "jung/" + $("#node-input-JUNGdatapointID").val());
-              }
-            }
-          }
+        var sURL = configA.callbackURL;
+        if (typeof sURL === "undefined" || sURL == "") {
+          $("#node-input-url").val("Please define server callback URL in settings!!!");
+        } else {
+          if (sURL.slice(-1) !== "/") sURL = sURL + "/";
+          $("#node-input-url").val(sURL + "jung/" + node.id);
         }
 
         $("#node-inputSelect-dpRefreshBtn").click();
@@ -254,25 +198,6 @@
       oneditresize: function (size) {},
     });
   })();
-
-  function generateUUID() {
-    // Public Domain/MIT
-    var d = new Date().getTime(); //Timestamp
-    var d2 = (typeof performance !== "undefined" && performance.now && performance.now() * 1000) || 0; //Time in microseconds since page-load or 0 if unsupported
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-      var r = Math.random() * 16; //random number between 0 and 16
-      if (d > 0) {
-        // Use timestamp until depleted
-        r = (d + r) % 16 | 0;
-        d = Math.floor(d / 16);
-      } else {
-        // Use microseconds since page-load if supported
-        r = (d2 + r) % 16 | 0;
-        d2 = Math.floor(d2 / 16);
-      }
-      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-    });
-  }
 </script>
 
 <style>
