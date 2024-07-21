@@ -51,6 +51,14 @@ module.exports = async function (RED) {
         // console.log("Received datapoints: " + JSON.stringify(JSON.parse(resG.body)));
         try {
           var dp = JSON.parse(resG.body);
+          var dp_keys = Object.keys(dp);
+          if (dp_keys.includes("errors")) {
+            delete dp["links"];
+            delete dp["meta"];
+
+            res.json(dp);
+            return;
+          }
 
           dp["data"].forEach((x, i) => {
             delete x["relationships"];

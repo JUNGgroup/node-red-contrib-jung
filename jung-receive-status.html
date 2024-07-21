@@ -47,7 +47,7 @@
   <div class="form-row">
     <label for="node-input-versija" class="label"><i class="fa fa-tag"></i> Version</label>
     <span class="spanStilius">
-      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-07-09 v1.0.4" />
+      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-07-19 v1.0.5" />
     </span>
   </div>
 </script>
@@ -129,6 +129,8 @@
         });
 
         $("#node-inputSelect-dpRefreshBtn").on("click", function () {
+          $("#node-inputSelect-datapoint").empty();
+
           if (configA === undefined) {
             console.log("configA not defined, skipping...");
             $("#node-inputSelect-datapoint").empty();
@@ -140,10 +142,10 @@
           if (configA.datapoints == "{}") return;
 
           var resp = JSON.parse(configA.datapoints);
+          if (resp == "{}") return; // if no config.datapoins, then skip datapoint dropdown creation
 
           var preselectedID = $("#node-input-datapointID").val();
 
-          $("#node-inputSelect-datapoint").empty();
           var element = document.createElement("option");
           var e_selected = false;
           for (let i = 0; i < resp.length; i++) {
