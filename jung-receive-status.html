@@ -47,7 +47,7 @@
   <div class="form-row">
     <label for="node-input-versija" class="label"><i class="fa fa-tag"></i> Version</label>
     <span class="spanStilius">
-      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-07-19 v1.0.5" />
+      <input type="text" id="node-input-versija" style="width:100%" readonly value="2024-08-12 v1.0.6" />
     </span>
   </div>
 </script>
@@ -125,6 +125,15 @@
             return;
           }
           configA = RED.nodes.node($("#node-input-settings").val());
+
+          var sURL = configA.callbackURL;
+          if (typeof sURL === "undefined" || sURL == "") {
+            $("#node-input-url").val("Please define server callback URL in settings!!!");
+          } else {
+            if (sURL.slice(-1) !== "/") sURL = sURL + "/";
+            $("#node-input-url").val(sURL + "jung/" + node.id);
+          }
+
           $("#node-inputSelect-dpRefreshBtn").click();
         });
 
@@ -183,14 +192,6 @@
         } else {
           $("#node-input-path").html(root);
           $("#node-input-tip").show();
-        }
-
-        var sURL = configA.callbackURL;
-        if (typeof sURL === "undefined" || sURL == "") {
-          $("#node-input-url").val("Please define server callback URL in settings!!!");
-        } else {
-          if (sURL.slice(-1) !== "/") sURL = sURL + "/";
-          $("#node-input-url").val(sURL + "jung/" + node.id);
         }
 
         $("#node-inputSelect-dpRefreshBtn").click();

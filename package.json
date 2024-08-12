@@ -1,6 +1,6 @@
 {
   "name": "@jung.group/node-red-contrib",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "JUNG Open API for Node-RED",
   "keywords": [
     "jung",
